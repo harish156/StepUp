@@ -9,4 +9,9 @@
     </author>
     <content src="index.html" />
     <access origin="*" />
+    <gap:plugin name="org.apache.cordova.device-motion" />
+    <gap:plugin name="org.apache.cordova.network-information"/>
+    <gap:plugin name="org.apache.cordova.geolocation"/>
+    
+
 </widget>

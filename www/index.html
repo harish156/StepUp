@@ -10,17 +10,24 @@
         <script type="text/javascript" src="js/index.js"></script>
         <script type="text/javascript" src="js/jquery.js"></script>
         <script type="text/javascript" src="js/jquery.mobile-1.4.1.min.js"></script>
+        <script type="text/javascript"src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkWuq_IGi7aqppTs477Wq_BD6i8Bw_WAs&sensor=false"></script>
         <title>StepUp</title>
     </head>
     <body>
         <div data-role="page" id = "home">
             <div data-role="header">My Header1</div>
-             <div role="main" class="ui-content">My Content1</div>
+             <div role="main" class="ui-content">
 			 <form>
                     <label for="flip-checkbox">Start Accelerometer</label>
                     <input type="checkbox" data-role="flipswitch" name="flip-checkbox" id="flip-checkbox">
                 </form>
                 <div id="acceleration_values"></div>
+                <form>
+                    <label for="flip-checkbox">Start GeoLocation</label>
+                    <input type="checkbox" data-role="flipswitch" name="flip-checkbox-geo" id="flip-checkbox-geo">
+                </form>
+                <div id="geoLocation_values"></div>
+                </div>
              <div data-role="footer" data-position="fixed">
                 <div data-role="navbar">
                     <ul>
@@ -32,7 +39,9 @@
         </div>
         <div data-role="page" id = "map">
             <div data-role="header">My Header2</div>
-             <div role="main" class="ui-content">My Content2</div>
+             <div role="main" class="ui-content">
+                <div id = "map_canvas"></div>
+            </div>
              <div data-role="footer" data-position="fixed">
                 <div data-role="navbar">
                     <ul>
@@ -41,12 +50,14 @@
                     </ul>
                 </div>
                 </div>
+            
         </div>
         
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
+
         <script type="text/javascript">
-            app.initialize();
+            StepUp.initialize();
         </script>
     </body>
 </html>

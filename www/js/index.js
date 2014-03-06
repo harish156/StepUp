@@ -1,64 +1,96 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-var app = {
-    // Application Constructor
+var StepUp = {
     initialize: function() {
         this.bindEvents();
     },
-    // Bind Event Listeners
-    //
-    // Bind any events that are required on startup. Common events are:
-    // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
-        document.addEventListener('deviceready', this.onDeviceReady, false);
         $(document).on('deviceready',this.onDeviceReady);
     },
-    // deviceready Event Handler
-    //
-    // The scope of 'this' is the event. In order to call the 'receivedEvent'
-    // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-     $("#flip-checkbox").on('change',app.checkState);
+        $("#flip-checkbox").on('change',StepUp.checkState);
+        $(document).on('backbutton',StepUp.exitApp);
+        $("#flip-checkbox-geo").on('change',StepUp.checkStateGeo);
     },
-     checkState : function() {
-        if($("#flip-checkbox").is(":checked")){
-               this.accelerometer();
+    exitApp:function(){
+        navigator.app.exitApp();
+    },
+    checkState:function(){
+        if($(this).is(":checked")){
+            StepUp.accelerometer();
         }
         else{
-               this.stop();
+            StepUp.stopAccelerometer();
         }
-     },
-     accelerometer:function(){
+    },
+    checkStateGeo:function(){
+        if($(this).is(":checked")){
+            StepUp.geoLocator();
+        }
+        else{
+            StepUp.stopGeoLocator();
+        }
+    },
+    accelerometer:function(){
         var options = {frequency:1000};
-        var watchId = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
+        window.localStorage.setItem("accelvector",JSON.stringify([]));
+        this.watchID = navigator.accelerometer.watchAcceleration(onSuccess,onError,options);
         function onSuccess(acceleration){
-               var x = acceleration.x , y = acceleration.y, z = acceleration.z;
-               $("#acceleration_values").html('X:'+x+'Y:'+y+'Z:'+z);
+            var x = acceleration.x, y = acceleration.y, z = acceleration.z;
+            var v = Math.sqrt(x*x+y*y+z*z);
+            $("#acceleration_values").html('V:'+v);
+            var accelvector = JSON.parse(window.localStorage.getItem("accelvector"));
+            accelvector.push(v);
+            window.localStorage.setItem("accelvector",JSON.stringify(accelvector));
         }
         function onError(){
             alert('Error');
         }
-
-     },
-     stop:function(){
+    },
+    stopAccelerometer:function(){
         navigator.accelerometer.clearWatch(this.watchID);
+        this.countSteps();
+    },
+    geoLocator:function(){
+        if(navigator.connection.type != navigator.connection.NONE){
+            var options = {timeout:1000};
+            this.geoArray = [];
+            this.watchGeoID = navigator.geolocation.watchPosition(onSuccess,onError,options);
+            function onSuccess(position){
+
+                    var lat = position.coords.latitude, lon = position.coords.longitude;
+                    $("#geoLocation_values").html( 'latitude'+lat+'longitude'+lon);
+                    this.geoArray.push(position);
+            }
+        }
+        else{
+            $("#geoLocation_values").html("<p>No Network access.!Please try again later</p>");
+        }
+    },
+    stopGeoLocator:function(){
+        navigator.geolocation.clearWatch(this.watchGeoID);
+        var data = this.geoArray;
+        var myLonLat =  new google.maps.LatLng(data[0].coords.latitude,
+                                       data[0].coords.longitude);
+        var myOptions = {zoom:15,center:myLonLat,mapTypeId:google.maps.MapTypeId.ROADMAP};
+        var  map = new google.maps.Map(document.getElementById('map-canvas'),
+      myOptions);
+        var tracCoords = [];
+        for(i=0;i<data.length;++i)
+        {
+             tracCoords.push(new google.maps.LatLng(data[i].coords.latitude,
+                                       data[i].coords.longitude));
+        }
+        var tracPath = new google.maps.Polyline({path:tracCoords,strokeColor:"#FF0000",strokeOpacity:1.0});
+        tracPath.setMap(map);
+    },
+
+    countSteps:function(){
+        var accelvector = JSON.parse(window.localStorage.getItem("accelvector")),steps = 0;
+        for(var i=1;i<accelvector.length;++i){
+            var vcurrent = accelvector[i],vprevious = accelvector[i-1];
+            if(Math.abs(vcurrent - vprevious) > 0.3){
+                ++steps;
+            }
+        }
+        $("#acceleration_values").html("<strong>"+steps+"</strong> steps taken!");
     }
-    // Update DOM on a Received Event
-   
 };
